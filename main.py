@@ -168,3 +168,6 @@ for epoch in range(num_epochs):
     print(f"epoch {epoch}/{num_epochs}")
     train(model, device, train_loader, optimizer)
 eval(model, device, test_loader)
+
+
+# TODO create several CNN architectures
