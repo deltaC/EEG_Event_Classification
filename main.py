@@ -161,7 +161,7 @@ train_loader:DataLoader = DataLoader(train_dataset, batch_size, True)
 test_loader:DataLoader = DataLoader(test_dataset, batch_size, True)
 
 
-model:MLP2 = MLP2()
+model:MLP2 = MLP2().to(device)
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
 for epoch in range(num_epochs):
