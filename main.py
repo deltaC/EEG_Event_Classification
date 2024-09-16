@@ -102,6 +102,8 @@ f2, Pxx_den2 = signal.welch(trials_df_r['T3'], sample_rate, nperseg=256)
 # plt.ylabel('PSD $[V^2/Hz]$')
 # plt.show()
 
+# Test statistics branch
+
 ###
 ##
 # Место для отбора каналов
