@@ -1,8 +1,8 @@
 # Классификация двух сигналов посредством анализа ЭЭГ
 
-import mlp
-from mlp import SignalsDataset1, SignalsDataset2, DataLoader
-from mlp import MLP1, MLP2, train, eval
+import nn
+from nn import SignalsDataset, DataLoader
+from nn import MLP, train, eval
 
 import torch
 import mne 
@@ -48,7 +48,7 @@ for stamp in mark_r:
 
 ### Segmentation
 sample_rate:float = raw.info['sfreq']
-window:numpy.ndarray = numpy.arange(int(-0.1 * sample_rate), int(0.3 * sample_rate)) # size of windows = 200
+window:numpy.ndarray = numpy.arange(int(-0.1 * sample_rate), int(0.3 * sample_rate)) # size of windows = 200 # TODO it's need to change
 
 trials:list[list[float]] = []
 
@@ -91,49 +91,15 @@ variances.append(r_var)
 variances:pandas.DataFrame = pandas.DataFrame(variances, columns=final_columns)
 
 
-### PSD computing
-f1, Pxx_den1 = signal.welch(trials_df_l['T3'], sample_rate, nperseg=256)
-f2, Pxx_den2 = signal.welch(trials_df_r['T3'], sample_rate, nperseg=256)
-
-# plt.semilogy(f1, Pxx_den1)
-# plt.semilogy(f2, Pxx_den2, c='red', alpha=0.5)
-# 
-# plt.xlabel('frequency [Hz]')
-# plt.ylabel('PSD $[V^2/Hz]$')
-# plt.show()
-
-###
-##
-# Место для отбора каналов
-##
-###
+############################################# ML
 
 
 # Параметры для моделей
 device:str = 'cuda' if torch.cuda.is_available() else 'cpu'
 num_epochs:int = 100
-batch_size:int = 4
+window_size:int = 100
+batch_size:int = 50
 learning_rate:float = 0.001
-
-
-### Полносвязная модель 1.0
-df_train:numpy.ndarray = trials[:int(0.8*trials.shape[0])]
-df_test:numpy.ndarray = trials[int(0.8*trials.shape[0]):]
-
-train_dataset:SignalsDataset1 = SignalsDataset1(df_train)
-test_dataset:SignalsDataset1 = SignalsDataset1(df_test)
-
-train_loader:DataLoader = DataLoader(train_dataset, batch_size, shuffle=True)
-test_loader:DataLoader = DataLoader(test_dataset, batch_size, shuffle=True)
-
-
-model:MLP1 = MLP1().to(device)
-optimizer = torch.optim.Adam(model.parameters(), learning_rate)
-
-for epoch in range(num_epochs):
-    print(f"epoch {epoch}/{num_epochs}")
-    train(model, device, train_loader, optimizer)
-eval(model, device, test_loader)
 
 
 ### Полносвязная модель 2.0
@@ -154,14 +120,14 @@ X_r:torch.Tensor = torch.tensor(windows_r, dtype=torch.float32)
 y_l:torch.Tensor = torch.tensor(y_l, dtype=torch.float32) # 61x1
 y_r:torch.Tensor = torch.tensor(y_r, dtype=torch.float32)
 
-train_dataset:SignalsDataset2 = SignalsDataset2(X_l[:50], X_r[:50], y_l[:50], y_r[:50])
-test_dataset:SignalsDataset2 = SignalsDataset2(X_l[50:], X_r[50:], y_l[50:], y_r[50:])
+train_dataset:SignalsDataset = SignalsDataset(X_l[:50], X_r[:50], y_l[:50], y_r[:50])
+test_dataset:SignalsDataset = SignalsDataset(X_l[50:], X_r[50:], y_l[50:], y_r[50:])
 
 train_loader:DataLoader = DataLoader(train_dataset, batch_size, True)
 test_loader:DataLoader = DataLoader(test_dataset, batch_size, True)
 
 
-model:MLP2 = MLP2().to(device)
+model:MLP = MLP().to(device)
 optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
 for epoch in range(num_epochs):
@@ -170,4 +136,5 @@ for epoch in range(num_epochs):
 eval(model, device, test_loader)
 
 
-# TODO create several CNN architectures
+# TODO check working or MLP model with our data after CSP
+# TODO create CNN architecture
