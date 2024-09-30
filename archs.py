@@ -1,7 +1,4 @@
-from tqdm import tqdm
-import numpy
 import torch
-import torchmetrics
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -40,31 +37,3 @@ class CNN(torch.nn.Module):
 
     def forward(self, X:torch.Tensor)->torch.Tensor:
         pass
-
-
-
-def train(model, device:str, train_loader:DataLoader, optimizer):
-    model.train()
-    for batch_index, (data, labels) in enumerate(tqdm(train_loader)):
-        data, labels = data.to(device), labels.reshape(-1,).to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = torch.nn.functional.nll_loss(output, labels.type(torch.long)) # negative log likelihood
-        loss.backward()
-        optimizer.step()
-
-
-def eval(model, device:str, test_loader:DataLoader)->None:
-    model.eval()
-    test_loss:float = 0
-    correct:int = 0
-    with torch.no_grad():
-        for data, label in tqdm(test_loader):
-            data, label = data.to(device), label.reshape(-1,).to(device)
-            output = model(data)
-            test_loss += torch.nn.functional.nll_loss(output, label.type(torch.long), reduction="sum").item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(label.view_as(pred)).sum().item()
-    test_loss /= len(test_loader.dataset)
-    accuracy:float = (100.0 * correct) / len(test_loader.dataset)
-    print(f"Test set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.2f}%)\n")
