@@ -164,7 +164,7 @@ def plot_psd(trials_PSD, trials_filt, freqs, chan_ind, chan_lab=None, maxy=None)
         plt.legend()
         
     plt.tight_layout()
-    plt.savefig('./psd_plot.png')
+    plt.savefig('./results/psd_plot.png')
 
 def plot_logvar(trials, trials_filt):
     '''
@@ -191,4 +191,4 @@ def plot_logvar(trials, trials_filt):
     plt.xlabel('channels/components')
     plt.ylabel('log-var')
     plt.legend(['left', 'rigth'])
-    plt.savefig('./logvar.png')
+    plt.savefig('./results/logvar.png')
