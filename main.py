@@ -1,10 +1,5 @@
 # Классификация двух сигналов посредством анализа ЭЭГ
 
-import nn
-from nn import SignalsDataset, DataLoader
-from nn import MLP, train, eval
-
-import torch
 import mne 
 from scipy import signal
 import numpy
