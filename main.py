@@ -43,7 +43,7 @@ for stamp in mark_r:
 
 ### Segmentation
 sample_rate:float = raw.info['sfreq']
-window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.0 * sample_rate)) # size of windows = 100
+window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
 
 trials:list[list[float]] = []
 
