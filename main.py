@@ -120,7 +120,7 @@ axes[1].semilogy(f2_2, Pxx_den2_2, c='red', alpha=0.5)
 axes[1].set_xlabel('frequency [Hz]')
 axes[1].set_ylabel('PSD $[V^2/Hz]$')
 
-plt.savefig('holy_c.jpg')
+plt.savefig('./results/holy_c.jpg')
 
 
 ### CSP and postprocessing
