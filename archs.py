@@ -1,4 +1,5 @@
 import torch
+import torchmetrics
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -19,14 +20,19 @@ class MLP(torch.nn.Module):
     def __init__(self)->None:
         super(MLP, self).__init__()
 
-        self.flatten = torch.nn.Flatten()
-        self.linear1 = torch.nn.Linear(200*19, 250, dtype=torch.float32)
-        self.linear2 = torch.nn.Linear(250, 2, dtype=torch.float32)
-    
+        self.flatten:torch.nn.Flatten = torch.nn.Flatten() # (10, 100, 19) -> (10, 1900)
+        self.fc1:torch.nn.Linear = torch.nn.Linear(100*19, 100, bias=True) # (10, 1900) x (1900, 100) -> (10, 100)
+        self.fc2:torch.nn.Linear = torch.nn.Linear(100, 1, bias=True) # (10, 100) x (100, 1) -> (10, 1)
+        self.relu:torch.nn.ReLU = torch.nn.ReLU(inplace=True)
+        self.sigmoid:torch.nn.Sigmoid = torch.nn.Sigmoid()
+
     def forward(self, X:torch.Tensor)->torch.Tensor:
-        out:torch.Tensor = torch.nn.functional.relu(self.linear1(self.flatten(X)))
-        out:torch.Tensor = torch.nn.functional.log_softmax(self.linear2(out), dim=1)
-        return out
+      out:torch.Tensor = self.fc1(self.flatten(X))
+      out:torch.Tensor = self.relu(out)
+      out:torch.Tensor = self.fc2(out)
+      out:torch.Tensor = self.sigmoid(out)
+      return out
+
 
 class CNN(torch.nn.Module):
     def __init__(self)->None:
