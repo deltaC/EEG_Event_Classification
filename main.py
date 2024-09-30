@@ -48,7 +48,7 @@ for stamp in mark_r:
 
 ### Segmentation
 sample_rate:float = raw.info['sfreq']
-window:numpy.ndarray = numpy.arange(int(-0.1 * sample_rate), int(0.3 * sample_rate)) # size of windows = 200 # TODO it's need to change
+window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
 
 trials:list[list[float]] = []
 
@@ -65,10 +65,21 @@ for event in events:
 trials:numpy.ndarray = numpy.array(trials)
 trials_df:pandas.DataFrame = pandas.DataFrame(trials, columns=final_columns)
 
+dataset_l:numpy.ndarray = trials[:6100]
+dataset_l:numpy.ndarray = numpy.delete(dataset_l, numpy.s_[-1], axis=1)
+
+dataset_r:numpy.ndarray = trials[6100:]
+dataset_r:numpy.ndarray = numpy.delete(dataset_r, numpy.s_[-1], axis=1)
+
+windows_l:numpy.ndarray = dataset_l.T.reshape(19, 100, 61)
+y_l:numpy.ndarray = numpy.zeros((61, 1))
+
+windows_r:numpy.ndarray = dataset_r.T.reshape(19, 100, 61)
+y_r:numpy.ndarray = numpy.ones((61, 1))
 
 ### Logvar fuction and computing variances
-def logvar(x:numpy.ndarray)->numpy.ndarray:
-    return numpy.log(numpy.var(x))
+def logvar(x:numpy.ndarray, axis:int=0)->numpy.ndarray:
+    return numpy.log(numpy.var(x, axis=axis))
 
 variances:list[list[float]] = []
 
@@ -90,51 +101,29 @@ r_var.append(1.0)
 variances.append(r_var)
 variances:pandas.DataFrame = pandas.DataFrame(variances, columns=final_columns)
 
+f1, Pxx_den1 = signal.welch(windows_l[4, :, :].reshape(6100,), sample_rate, nperseg=256)
+f2, Pxx_den2 = signal.welch(windows_r[4, :, :].reshape(6100,), sample_rate, nperseg=256)
 
-############################################# ML
+f1_2, Pxx_den1_2 = signal.welch(trials_df_l['C4'], sample_rate, nperseg=256)
+f2_2, Pxx_den2_2 = signal.welch(trials_df_r['C4'], sample_rate, nperseg=256)
 
+figure, axes = plt.subplots(2)
 
-# Параметры для моделей
-device:str = 'cuda' if torch.cuda.is_available() else 'cpu'
-num_epochs:int = 100
-window_size:int = 100
-batch_size:int = 50
-learning_rate:float = 0.001
+axes[0].semilogy(f1, Pxx_den1, alpha=0.5)
+axes[0].semilogy(f2, Pxx_den2, c='red', alpha=0.5)
 
+axes[0].set_xlabel('frequency [Hz]')
+axes[0].set_ylabel('PSD $[V^2/Hz]$')
 
-### Полносвязная модель 2.0
-dataset_l:numpy.ndarray = trials[:12200]
-dataset_l:numpy.ndarray = numpy.delete(dataset_l, numpy.s_[-1], axis=1)
+axes[1].semilogy(f1_2, Pxx_den1_2, alpha=0.5)
+axes[1].semilogy(f2_2, Pxx_den2_2, c='red', alpha=0.5)
 
-dataset_r:numpy.ndarray = trials[12200:]
-dataset_r:numpy.ndarray = numpy.delete(dataset_r, numpy.s_[-1], axis=1)
+axes[1].set_xlabel('frequency [Hz]')
+axes[1].set_ylabel('PSD $[V^2/Hz]$')
 
-windows_l:numpy.ndarray = numpy.array(numpy.vsplit(dataset_l, 61))
-y_l:numpy.ndarray = numpy.zeros((61, 1))
-
-windows_r:numpy.ndarray = numpy.array(numpy.vsplit(dataset_r, 61))
-y_r:numpy.ndarray = numpy.ones((61, 1))
-
-X_l:torch.Tensor = torch.tensor(windows_l, dtype=torch.float32) # 61x200x19
-X_r:torch.Tensor = torch.tensor(windows_r, dtype=torch.float32)
-y_l:torch.Tensor = torch.tensor(y_l, dtype=torch.float32) # 61x1
-y_r:torch.Tensor = torch.tensor(y_r, dtype=torch.float32)
-
-train_dataset:SignalsDataset = SignalsDataset(X_l[:50], X_r[:50], y_l[:50], y_r[:50])
-test_dataset:SignalsDataset = SignalsDataset(X_l[50:], X_r[50:], y_l[50:], y_r[50:])
-
-train_loader:DataLoader = DataLoader(train_dataset, batch_size, True)
-test_loader:DataLoader = DataLoader(test_dataset, batch_size, True)
+plt.savefig('holy_c.jpg')
 
 
-model:MLP = MLP().to(device)
-optimizer = torch.optim.Adam(model.parameters(), learning_rate)
+### CSP and postprocessing
 
-for epoch in range(num_epochs):
-    print(f"epoch {epoch}/{num_epochs}")
-    train(model, device, train_loader, optimizer)
-eval(model, device, test_loader)
-
-
-# TODO check working or MLP model with our data after CSP
-# TODO create CNN architecture
+### Classification
