@@ -45,6 +45,7 @@ for stamp in mark_r:
 ### Segmentation
 sample_rate:float = raw.info['sfreq']
 window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
+window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
 
 trials:list[list[float]] = []
 
@@ -73,8 +74,21 @@ y_l:numpy.ndarray = numpy.zeros((61, 1))
 windows_r:numpy.ndarray = dataset_r.T.reshape(19, 100, 61)
 y_r:numpy.ndarray = numpy.ones((61, 1))
 
+dataset_l:numpy.ndarray = trials[:6100]
+dataset_l:numpy.ndarray = numpy.delete(dataset_l, numpy.s_[-1], axis=1)
+
+dataset_r:numpy.ndarray = trials[6100:]
+dataset_r:numpy.ndarray = numpy.delete(dataset_r, numpy.s_[-1], axis=1)
+
+windows_l:numpy.ndarray = dataset_l.T.reshape(19, 100, 61)
+y_l:numpy.ndarray = numpy.zeros((61, 1))
+
+windows_r:numpy.ndarray = dataset_r.T.reshape(19, 100, 61)
+y_r:numpy.ndarray = numpy.ones((61, 1))
 
 ### Logvar fuction and computing variances
+def logvar(x:numpy.ndarray, axis:int=0)->numpy.ndarray:
+    return numpy.log(numpy.var(x, axis=axis))
 def logvar(x:numpy.ndarray, axis:int=0)->numpy.ndarray:
     return numpy.log(numpy.var(x, axis=axis))
 
@@ -100,8 +114,8 @@ variances:pandas.DataFrame = pandas.DataFrame(variances, columns=final_columns)
 
 
 ### PSD computing
-f1, Pxx_den1 = signal.welch(trials_df_l['T3'], sample_rate, nperseg=256)
-f2, Pxx_den2 = signal.welch(trials_df_r['T3'], sample_rate, nperseg=256)
+f1, Pxx_den1 = signal.welch(windows_l[4, :, :].reshape(6100,), sample_rate, nperseg=256)
+f2, Pxx_den2 = signal.welch(windows_r[4, :, :].reshape(6100,), sample_rate, nperseg=256)
 
 f1_2, Pxx_den1_2 = signal.welch(trials_df_l['C4'], sample_rate, nperseg=256)
 f2_2, Pxx_den2_2 = signal.welch(trials_df_r['C4'], sample_rate, nperseg=256)
