@@ -6,6 +6,7 @@ import numpy
 import pandas
 import matplotlib.pyplot as plt
 
+import stats
 
 ### Loading, filtering and extracting data
 raw:mne.io.Raw = mne.io.read_raw_edf('data/Dual_Aural.edf', preload=True)
@@ -44,7 +45,6 @@ for stamp in mark_r:
 ### Segmentation
 sample_rate:float = raw.info['sfreq']
 window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
-window:numpy.ndarray = numpy.arange(int(0.0 * sample_rate), int(0.2 * sample_rate)) # size of windows = 100
 
 trials:list[list[float]] = []
 
@@ -72,21 +72,11 @@ y_l:numpy.ndarray = numpy.zeros((61, 1))
 
 windows_r:numpy.ndarray = dataset_r.T.reshape(19, 100, 61)
 y_r:numpy.ndarray = numpy.ones((61, 1))
-dataset_l:numpy.ndarray = trials[:6100]
-dataset_l:numpy.ndarray = numpy.delete(dataset_l, numpy.s_[-1], axis=1)
 
-dataset_r:numpy.ndarray = trials[6100:]
-dataset_r:numpy.ndarray = numpy.delete(dataset_r, numpy.s_[-1], axis=1)
-
-windows_l:numpy.ndarray = dataset_l.T.reshape(19, 100, 61)
-y_l:numpy.ndarray = numpy.zeros((61, 1))
-
-windows_r:numpy.ndarray = dataset_r.T.reshape(19, 100, 61)
-y_r:numpy.ndarray = numpy.ones((61, 1))
 
 ### Logvar fuction and computing variances
-def logvar(x:numpy.ndarray, axis:int=0, axis:int=0)->numpy.ndarray:
-    return numpy.log(numpy.var(x, axis=axis, axis=axis))
+def logvar(x:numpy.ndarray, axis:int=0)->numpy.ndarray:
+    return numpy.log(numpy.var(x, axis=axis))
 
 variances:list[list[float]] = []
 
@@ -134,6 +124,33 @@ plt.savefig('holy_c.jpg')
 
 
 ### CSP and postprocessing
+trials_filt:dict[str, numpy.ndarray] = {
+    'left': stats.bandpass(windows_l, 2, 15, sample_rate),
+    'right': stats.bandpass(windows_r, 2, 15, sample_rate)}
+
+psd_l, freqs = stats.psd(trials_filt['left'], sample_rate)
+psd_r, freqs = stats.psd(trials_filt['right'], sample_rate)
+trials_PSD:dict[str, numpy.ndarray] = {'left': psd_l, 'right': psd_r}
+
+stats.plot_psd(
+    trials_PSD,
+    trials_filt,
+    freqs,
+    [4, 17, 5],
+    chan_lab=['left', 'center', 'right'],
+    maxy=20
+)
+
+W:numpy.ndarray = stats.csp(trials_filt['left'], trials_filt['right'])
+trials_csp:dict[str, numpy.ndarray] = {
+    'left': stats.apply_mix(W, trials_filt['left']),
+    'right': stats.apply_mix(W, trials_filt['right'])}
+
+trials_logvar:dict[str, numpy.ndarray] = {
+    'left': logvar(trials_csp['left'], axis=1),
+    'right': logvar(trials_csp['right'], axis=1)}
+
+stats.plot_logvar(trials_logvar, trials_filt)
 
 ### Classification
 
