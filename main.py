@@ -96,6 +96,8 @@ r_var.append(1.0)
 variances.append(r_var)
 variances:pandas.DataFrame = pandas.DataFrame(variances, columns=final_columns)
 
+
+### PSD computing
 f1, Pxx_den1 = signal.welch(windows_l[4, :, :].reshape(6100,), sample_rate, nperseg=256)
 f2, Pxx_den2 = signal.welch(windows_r[4, :, :].reshape(6100,), sample_rate, nperseg=256)
 
