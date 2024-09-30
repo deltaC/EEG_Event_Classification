@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 
 import stats
 import archs
+from archs import torch
+from archs import torchmetrics
+from archs import SignalsDataset, DataLoader
+from archs import MLP
 
 ### Loading, filtering and extracting data
 raw:mne.io.Raw = mne.io.read_raw_edf('data/Dual_Aural.edf', preload=True)
@@ -153,5 +157,20 @@ trials_logvar:dict[str, numpy.ndarray] = {
 
 stats.plot_logvar(trials_logvar, trials_filt)
 
+X_csp_l:numpy.ndarray = trials_csp['left'].T
+X_csp_r:numpy.ndarray = trials_csp['right'].T
+
+
 ### Classification
 
+model_path:str = './models/mlp_model.pth'
+
+model = MLP()
+model.load_state_dict(torch.load(model_path, weights_only=True))
+
+X_test_csp_r:torch.Tensor = torch.tensor(X_csp_r[:10], dtype=torch.float32)
+y_test_r:torch.Tensor = torch.tensor(y_r[:10], dtype=torch.float32)
+
+with torch.no_grad():
+    y_pred_r:torch.Tensor = model(X_test_csp_r)
+print(numpy.round(y_pred_r.detach().cpu().numpy()))
