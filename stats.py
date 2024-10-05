@@ -1,9 +1,13 @@
-# Файл содержит вспомогательные статистические функции
+# This file contains useful statistical functions
 
 import numpy
 import scipy
 from matplotlib import mlab
 import matplotlib.pyplot as plt
+
+
+def logvar(x, axis=0):
+    return numpy.log(numpy.var(x, axis=axis))
 
 
 def bandpass(trials:numpy.ndarray, low:float, high:float, sample_rate:float):
@@ -165,6 +169,7 @@ def plot_psd(trials_PSD, trials_filt, freqs, chan_ind, chan_lab=None, maxy=None)
         
     plt.tight_layout()
     plt.savefig('./results/psd_plot.png')
+    plt.show()
 
 def plot_logvar(trials, trials_filt):
     '''
