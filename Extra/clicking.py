@@ -6,7 +6,7 @@ from datetime import datetime
 pygame.mixer.init()
 
 # Load click sound
-click_sound = pygame.mixer.Sound("Extra/click.wav")
+click_sound = pygame.mixer.Sound("click.wav")
 
 # Define the interval between clicks (in seconds)
 CLICK_INTERVAL = 1.15
@@ -47,7 +47,7 @@ while counter < 120:
 print("Program stopped.")
 
 # Save timestamps to a file
-with open("Extra/click_timestamps.csv", "w") as file:
+with open("click_timestamps.csv", "w") as file:
     for timestamp in timestamps:
         file.write(timestamp + "\n")
 
