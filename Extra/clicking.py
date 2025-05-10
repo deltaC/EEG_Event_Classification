@@ -1,28 +1,29 @@
 import pygame
 import time
+import numpy as np
 from datetime import datetime
 
 # Initialize pygame mixer
 pygame.mixer.init()
 
 # Load click sound
-click_sound = pygame.mixer.Sound("click.wav")
+click_sound = pygame.mixer.Sound("Extra/click.wav")
 
 # Define the interval between clicks (in seconds)
-CLICK_INTERVAL = 1.15
+N_CLICKS = 62
+click_intervals = 1.2 + np.random.rand(N_CLICKS)
 
 # Store timestamps for each click
 timestamps = ['Ear,Time']
 
 # Start with the sound in the left ear
-left_ear = True
-counter = 0
+is_left_ear = [i < 0.5 for i in np.random.rand(N_CLICKS)]
 
 
-while counter < 120:
+for i in range(N_CLICKS):
     # Alternate between left and right ear
     channel = click_sound.play()
-    if left_ear:
+    if is_left_ear[i]:
         # Set volume to play in the left ear
         channel.set_volume( 1.0, 0.0)  # Left ear, no sound in right
         ear = "Left"
@@ -36,19 +37,15 @@ while counter < 120:
     timestamps.append(f"{ear},{current_time.strftime('%Y-%m-%d %H:%M:%S.%f')}")
     print(timestamps[-1])
     
-    # Alternate ears
-    left_ear = not left_ear
-    
     # Wait for the interval
-    time.sleep(CLICK_INTERVAL)
-    counter += 1
+    time.sleep(click_intervals[i])
 
 
 print("Program stopped.")
 
 # Save timestamps to a file
-with open("click_timestamps.csv", "w") as file:
+with open("click_timestamps2.csv", "w") as file:
     for timestamp in timestamps:
         file.write(timestamp + "\n")
 
-print("Timestamps saved to click_timestamps.csv")
+print("Timestamps saved to click_timestamps2.csv")
