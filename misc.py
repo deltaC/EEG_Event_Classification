@@ -38,57 +38,45 @@ def get_trials_from_two_side_events(data: np.ndarray, sample_rate: float, events
 
     Function returns tuple (trials_l, trials_r)
     """
-    win = np.arange(int(-onset * sample_rate), int(offset * sample_rate))
 
     trials_l = []
     trials_r = []
 
     for side in events.keys():
         for event in events[side]:
-            for i in win:
-                col = []
-                for j in range(n_channels):
-                    col.append(data[event + i][j] * 1e6)
-                    
-                if side == 'right':
-                    trials_r.append(col)
-                else:
-                    trials_l.append(col)
+            if side == 'right':
+                trials_r.append(data[event-int(onset * sample_rate):event+int(offset * sample_rate), :])
+            else:
+                trials_l.append(data[event-int(onset * sample_rate):event+int(offset * sample_rate), :])
             
     trials_l = np.array(trials_l)
     trials_r = np.array(trials_r)
     
     n_events_l = len(events['left'])
     n_events_r = len(events['right'])
-    trials_l = trials_l.T.reshape((n_channels, len(win), n_events_l))
-    trials_r = trials_r.T.reshape((n_channels, len(win), n_events_r))
+    trials_l = trials_l.T.reshape((n_channels, int((offset + onset) * sample_rate), n_events_l))
+    trials_r = trials_r.T.reshape((n_channels, int((offset + onset) * sample_rate), n_events_r))
     
     return (trials_l, trials_r)
 
 
-def get_trials_from_events(data: np.ndarray, sample_rate: float, events: dict, 
+def get_trials_from_events(data: np.ndarray, sample_rate: float, events: list, 
                                     n_channels: int, onset = 0.1, offset = 0.1) -> np.ndarray:
     """
     1. The window will be fit on (-onset, offset) in seconds    
 
-    Function returns np.ndarray   trials
+    Function returns np.ndarray trials
     """
-    win = np.arange(int(-onset * sample_rate), int(offset * sample_rate))
 
     trials = []
 
     for event in events:
-        for i in win:
-            col = []
-            for j in range(n_channels):
-                col.append(data[event + i][j] * 1e6)
-                
-            trials.append(col)
+        trials.append(data[event-int(onset * sample_rate):event+int(offset * sample_rate), :])
             
     trials = np.array(trials)
     
     n_events = len(events)
-    trials = trials.T.reshape((n_channels, len(win), n_events))
+    trials = trials.T.reshape((n_channels, int((offset + onset) * sample_rate), n_events))
     
     return trials
 
@@ -116,5 +104,5 @@ def get_corr_matrix(trials: np.ndarray) -> np.ndarray:
 def correlation(in1: np.ndarray, in2: np.ndarray) -> float:
     N = len(in1)
     numenator = np.sum((in1 - np.mean(in1)) * (in2 - np.mean(in2)))
-    denumenator = np.std(in1) * np.std(in2) * N ** 2
+    denumenator = np.std(in1) * np.std(in2) * N
     return numenator / denumenator
